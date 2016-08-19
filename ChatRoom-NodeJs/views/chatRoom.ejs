@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <title>ChatRoom-NodeJs</title>
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- 可选的Bootstrap主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+
+    <!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+    <script src="/javascripts/jquery-1.11.3.min.js"></script>
+
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="/javascripts/socket.io-client/socket.io.js"></script>
+    <script src="/javascripts/chatRoom/chatRoom.js"></script>
+
+</head>
+<body>
+<div class="container">
+    <div class="row" style="margin-top: 100px">
+        <div class="col-md-9">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">内容</h3>
+                </div>
+                <div class="panel-body" style="height:600px;" id="msgDialog">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">成员(<span id="memberCount"></span>)</h3>
+                </div>
+                <div class="panel-body" style="height:600px;">
+                    <ul id="members"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-9">
+            <textarea class="form-control" rows="5" id="msgContent"></textarea>
+            <input type="hidden" id="username" value="<%=username%>">
+        </div>
+        <div class="col-md-3">
+            <input class="btn btn-primary" type="button" value="发送" id="sendMsgBtn">
+        </div>
+    </div>
+
+</div>
+</body>
+<script>
+    var socket = io.connect('http://127.0.0.1:8888');
+    socket.on('welcome',function(data){
+        var username = $("#username").val();
+        displayMembers(data.members,username);
+        displaySysMsg(username);
+        $("#memberCount").html(data.members.length+1);
+    });
+
+    socket.emit('enter',{username:$("#username").val()});
+
+    socket.on('welcomeMember',function(param1,username){
+        $("#memberCount").html(param1.length);
+        displaySysMsg(username);
+        addMember4Enter(username);
+    });
+
+    socket.on('sendMsg.group',function(username,msgContent){
+        console.log(username+':'+msgContent);
+        displayMsg(username,msgContent);
+    });
+
+    socket.on('members.update',function(username,members){
+        $("#memberCount").html(members.length);
+        removeMember4Disconnect(username);
+    });
+</script>
+</html>
